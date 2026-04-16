@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Action Potential Sequencer</title>
+<style>
+  :root {
+    --bg: #f7f8fc;
+    --surface: #ffffff;
+    --border: #e2e5ed;
+    --border-hover: #c5c9d6;
+    --text: #1a1d2b;
+    --text-mid: #4a5068;
+    --text-light: #8890a5;
+    --accent: #4f6df5;
+    --accent-light: #eef1fe;
+    --success: #22c55e;
+    --success-bg: #f0fdf4;
+    --success-border: #bbf7d0;
+    --error: #ef4444;
+    --error-bg: #fef2f2;
+    --error-border: #fecaca;
+    --slot-empty: #f1f3f9;
+    --slot-border: #d5dae6;
+    --slot-hover: #e8ebf5;
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --card-shadow-drag: 0 12px 28px rgba(79,109,245,0.18), 0 4px 10px rgba(0,0,0,0.08);
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header {
+    padding: 28px 40px 0;
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--text);
+  }
+
+  header p {
+    font-size: 14px;
+    color: var(--text-mid);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  .layout {
+    max-width: 1120px;
+    margin: 24px auto 0;
+    padding: 0 40px 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  .column-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-bottom: 12px;
+  }
+
+  /* Card Bank (left) */
+  .card-bank {
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+    cursor: grab;
+    user-select: none;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s, opacity 0.15s;
+    box-shadow: var(--card-shadow);
+    position: relative;
+  }
+
+  .card:hover {
+    border-color: var(--border-hover);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+
+  .card.dragging {
+    opacity: 0.4;
+    transform: scale(0.97);
+  }
+
+  .card .drag-handle {
+    display: inline-block;
+    width: 14px;
+    margin-right: 10px;
+    color: var(--text-light);
+    font-size: 16px;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  /* Slot area (right) */
+  .slot-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .slot {
+    background: var(--slot-empty);
+    border: 2px dashed var(--slot-border);
+    border-radius: var(--radius);
+    min-height: 52px;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    transition: background 0.15s, border-color 0.15s;
+    position: relative;
+  }
+
+  .slot .slot-label {
+    position: absolute;
+    left: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-light);
+    pointer-events: none;
+    transition: opacity 0.15s;
+  }
+
+  .slot.has-card .slot-label {
+    opacity: 0;
+  }
+
+  .slot.drag-over {
+    background: var(--accent-light);
+    border-color: var(--accent);
+  }
+
+  .slot .card {
+    width: 100%;
+    margin: 0;
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  .slot .card:hover {
+    border-color: var(--accent);
+  }
+
+  /* Success / Error states on slots */
+  .slot.correct {
+    border-style: solid;
+    border-color: var(--success-border);
+    background: var(--success-bg);
+  }
+
+  .slot.correct .card {
+    border-color: var(--success);
+    background: var(--success-bg);
+    color: #166534;
+  }
+
+  .slot.incorrect {
+    border-style: solid;
+    border-color: var(--error-border);
+    background: var(--error-bg);
+  }
+
+  .slot.incorrect .card {
+    border-color: var(--error);
+    background: var(--error-bg);
+    color: #991b1b;
+  }
+
+  /* Buttons */
+  .actions {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 40px 48px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .btn {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 11px 28px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.05s, opacity 0.15s;
+  }
+
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-primary:hover { background: #3d5be3; }
+  .btn-primary:disabled {
+    background: #c5cde8;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text-mid);
+    border: 1.5px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    background: var(--bg);
+    border-color: var(--border-hover);
+  }
+
+  /* Feedback banner */
+  .feedback {
+    max-width: 1120px;
+    margin: -8px auto 16px;
+    padding: 0 40px;
+    text-align: center;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .feedback-msg {
+    font-size: 15px;
+    font-weight: 600;
+    padding: 10px 24px;
+    border-radius: 8px;
+    animation: feedbackIn 0.3s ease;
+  }
+
+  .feedback-msg.success {
+    background: var(--success-bg);
+    color: #166534;
+    border: 1px solid var(--success-border);
+  }
+
+  .feedback-msg.error {
+    background: var(--error-bg);
+    color: #991b1b;
+    border: 1px solid var(--error-border);
+  }
+
+  @keyframes feedbackIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Success confetti burst */
+  .confetti-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1000;
+    overflow: hidden;
+  }
+
+  .confetti-piece {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    animation: confettiFall 1.5s ease-out forwards;
+  }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg) scale(0.3); opacity: 0; }
+  }
+
+  /* Ghost card being dragged */
+  .drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.92;
+    transform: rotate(2deg) scale(1.04);
+    box-shadow: var(--card-shadow-drag);
+    background: var(--surface);
+    border: 1.5px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    max-width: 480px;
+  }
+
+  .drag-ghost .drag-handle {
+    display: inline-block;
+    width: 14px;
+    margin-right: 10px;
+    color: var(--text-light);
+    font-size: 16px;
+    vertical-align: middle;
+  }
+
+  /* Responsive */
+  @media (max-width: 860px) {
+    .layout {
+      grid-template-columns: 1fr;
+      gap: 24px;
+      padding: 0 20px 24px;
+    }
+    header { padding: 20px 20px 0; }
+    .actions { padding: 0 20px 32px; }
+    .feedback { padding: 0 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Action Potential Sequencer</h1>
+  <p>Drag each card into the correct step. Place all 8, then check your order.</p>
+</header>
+
+<div class="layout">
+  <div>
+    <div class="column-label">Cards</div>
+    <div class="card-bank" id="cardBank"></div>
+  </div>
+  <div>
+    <div class="column-label">Sequence</div>
+    <div class="slot-list" id="slotList"></div>
+  </div>
+</div>
+
+<div class="feedback" id="feedback"></div>
+
+<div class="actions">
+  <button class="btn btn-primary" id="checkBtn" disabled>Check Order</button>
+  <button class="btn btn-secondary" id="resetBtn">Reset</button>
+</div>
+
+<script>
+// ── Step data ──
+const STEPS = [
+  {
+    id: 1,
+    text: "The sodium-potassium pump uses ATP to push 3 Na\u207A out and pull 2 K\u207A in, setting up the ion gradient."
+  },
+  {
+    id: 2,
+    text: "The neuron sits at resting potential (\u221270 mV). Both voltage-gated Na\u207A and K\u207A channels are closed. The cell is polarized and ready."
+  },
+  {
+    id: 3,
+    text: "A stimulus arrives from a neighboring region. Positive charge trickles in and raises the voltage toward threshold (\u221255 mV). Below threshold, nothing fires."
+  },
+  {
+    id: 4,
+    text: "Voltage-gated Na\u207A channels snap open. Na\u207A rushes into the cell. The inside flips from negative to positive (+40 mV). This is depolarization."
+  },
+  {
+    id: 5,
+    text: "Na\u207A channels slam shut and lock (inactivate). They cannot reopen until the patch fully resets. This prevents the signal from traveling backward."
+  },
+  {
+    id: 6,
+    text: "Voltage-gated K\u207A channels open slowly. K\u207A flows out of the cell, pulling the voltage back down. The membrane repolarizes and briefly dips below resting potential (refractory period)."
+  },
+  {
+    id: 7,
+    text: "The Na\u207A trapped inside the cell repels other Na\u207A ions sideways, pushing positive charge toward the next patch of membrane along the axon."
+  },
+  {
+    id: 8,
+    text: "The spreading positive charge reaches the next patch and raises its voltage past threshold. That patch\u2019s Na\u207A channels trigger open, and the action potential propagates forward."
+  }
+];
+
+// ── State ──
+let slotContents = Array(8).fill(null); // card id in each slot
+let bankCards = []; // card ids still in bank
+let checked = false;
+let dragCardId = null;
+let dragSource = null; // 'bank' | slot index
+let ghost = null;
+
+// ── Audio ──
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+}
+
+function playSuccess() {
+  ensureAudio();
+  const now = audioCtx.currentTime;
+  // pleasant ascending chime
+  [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, now + i * 0.12);
+    gain.gain.linearRampToValueAtTime(0.18, now + i * 0.12 + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.5);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now + i * 0.12);
+    osc.stop(now + i * 0.12 + 0.5);
+  });
+}
+
+function playError() {
+  ensureAudio();
+  const now = audioCtx.currentTime;
+  // short low buzz
+  [180, 160].forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.12, now + i * 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.15 + 0.25);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now + i * 0.15);
+    osc.stop(now + i * 0.15 + 0.25);
+  });
+}
+
+// ── Confetti ──
+function burstConfetti() {
+  const container = document.createElement('div');
+  container.className = 'confetti-container';
+  document.body.appendChild(container);
+  const colors = ['#4f6df5', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.left = (20 + Math.random() * 60) + '%';
+    piece.style.top = '-10px';
+    piece.style.animationDelay = (Math.random() * 0.4) + 's';
+    piece.style.animationDuration = (1 + Math.random() * 1) + 's';
+    piece.style.width = (6 + Math.random() * 6) + 'px';
+    piece.style.height = (6 + Math.random() * 4) + 'px';
+    container.appendChild(piece);
+  }
+  setTimeout(() => container.remove(), 2500);
+}
+
+// ── Shuffle ──
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ── Render ──
+const bankEl = document.getElementById('cardBank');
+const slotListEl = document.getElementById('slotList');
+const feedbackEl = document.getElementById('feedback');
+const checkBtn = document.getElementById('checkBtn');
+const resetBtn = document.getElementById('resetBtn');
+
+function getStep(id) { return STEPS.find(s => s.id === id); }
+
+function createCardEl(id) {
+  const step = getStep(id);
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.dataset.id = id;
+  el.draggable = true;
+  el.innerHTML = '<span class="drag-handle">\u2261</span>' + step.text;
+  return el;
+}
+
+function render() {
+  // Bank
+  bankEl.innerHTML = '';
+  bankCards.forEach(id => {
+    const card = createCardEl(id);
+    card.addEventListener('dragstart', onDragStartBank);
+    card.addEventListener('touchstart', onTouchStartBank, { passive: false });
+    bankEl.appendChild(card);
+  });
+
+  // Slots
+  slotListEl.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'slot' + (slotContents[i] !== null ? ' has-card' : '');
+    slot.dataset.slot = i;
+
+    const label = document.createElement('div');
+    label.className = 'slot-label';
+    label.textContent = 'Step ' + (i + 1);
+    slot.appendChild(label);
+
+    if (slotContents[i] !== null) {
+      const card = createCardEl(slotContents[i]);
+      card.addEventListener('dragstart', (e) => onDragStartSlot(e, i));
+      card.addEventListener('touchstart', (e) => onTouchStartSlot(e, i), { passive: false });
+      slot.appendChild(card);
+    }
+
+    slot.addEventListener('dragover', onDragOver);
+    slot.addEventListener('dragleave', onDragLeave);
+    slot.addEventListener('drop', (e) => onDrop(e, i));
+    slotListEl.appendChild(slot);
+  }
+
+  // Check button state
+  const allPlaced = slotContents.every(s => s !== null);
+  checkBtn.disabled = !allPlaced || checked;
+}
+
+function renderChecked(results) {
+  const slots = slotListEl.querySelectorAll('.slot');
+  slots.forEach((slot, i) => {
+    slot.classList.remove('correct', 'incorrect');
+    // On success, mark all green. On failure, mark all red (no individual hints).
+  });
+
+  const allCorrect = results.every(r => r);
+
+  if (allCorrect) {
+    slots.forEach(s => s.classList.add('correct'));
+    feedbackEl.innerHTML = '<div class="feedback-msg success">All correct! You nailed the sequence.</div>';
+    playSuccess();
+    burstConfetti();
+  } else {
+    slots.forEach(s => s.classList.add('incorrect'));
+    feedbackEl.innerHTML = '<div class="feedback-msg error">Not quite right. Try again!</div>';
+    playError();
+  }
+
+  // Disable dragging after check
+  slotListEl.querySelectorAll('.card').forEach(c => {
+    c.draggable = false;
+    c.style.cursor = 'default';
+  });
+}
+
+// ── Drag & Drop (mouse) ──
+function onDragStartBank(e) {
+  if (checked) return e.preventDefault();
+  dragCardId = parseInt(e.target.closest('.card').dataset.id);
+  dragSource = 'bank';
+  e.target.closest('.card').classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  // Minimal transparent ghost (browser default is fine but we add custom below)
+  const img = new Image();
+  img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+  e.dataTransfer.setDragImage(img, 0, 0);
+  showGhost(e, dragCardId);
+}
+
+function onDragStartSlot(e, slotIdx) {
+  if (checked) return e.preventDefault();
+  dragCardId = slotContents[slotIdx];
+  dragSource = slotIdx;
+  e.target.closest('.card').classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  const img = new Image();
+  img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+  e.dataTransfer.setDragImage(img, 0, 0);
+  showGhost(e, dragCardId);
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+  if (ghost) moveGhost(e);
+}
+
+function onDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function onDrop(e, slotIdx) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  hideGhost();
+  if (dragCardId === null) return;
+
+  const existingCard = slotContents[slotIdx];
+
+  if (dragSource === 'bank') {
+    // Remove from bank
+    bankCards = bankCards.filter(id => id !== dragCardId);
+    // If slot already has a card, send it to bank
+    if (existingCard !== null) {
+      bankCards.push(existingCard);
+    }
+    slotContents[slotIdx] = dragCardId;
+  } else if (typeof dragSource === 'number') {
+    // Swap between slots, or slot to slot
+    if (existingCard !== null) {
+      slotContents[dragSource] = existingCard;
+    } else {
+      slotContents[dragSource] = null;
+    }
+    slotContents[slotIdx] = dragCardId;
+  }
+
+  dragCardId = null;
+  dragSource = null;
+  feedbackEl.innerHTML = '';
+  render();
+}
+
+// Handle dragend (dropped outside valid target)
+document.addEventListener('dragend', () => {
+  hideGhost();
+  document.querySelectorAll('.card.dragging').forEach(c => c.classList.remove('dragging'));
+  document.querySelectorAll('.slot.drag-over').forEach(s => s.classList.remove('drag-over'));
+});
+
+// Handle dropping card back on the bank
+bankEl.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  if (ghost) moveGhost(e);
+});
+bankEl.addEventListener('drop', (e) => {
+  e.preventDefault();
+  hideGhost();
+  if (dragCardId === null) return;
+  if (typeof dragSource === 'number') {
+    slotContents[dragSource] = null;
+    bankCards.push(dragCardId);
+  }
+  dragCardId = null;
+  dragSource = null;
+  feedbackEl.innerHTML = '';
+  render();
+});
+
+// ── Ghost ──
+function showGhost(e, cardId) {
+  hideGhost();
+  ghost = document.createElement('div');
+  ghost.className = 'drag-ghost';
+  const step = getStep(cardId);
+  ghost.innerHTML = '<span class="drag-handle">\u2261</span>' + step.text;
+  document.body.appendChild(ghost);
+  moveGhost(e);
+}
+
+function moveGhost(e) {
+  if (!ghost) return;
+  const x = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+  const y = e.clientY || (e.touches && e.touches[0].clientY) || 0;
+  ghost.style.left = (x + 12) + 'px';
+  ghost.style.top = (y - 20) + 'px';
+}
+
+function hideGhost() {
+  if (ghost) { ghost.remove(); ghost = null; }
+}
+
+// ── Touch support ──
+let touchCardId = null;
+let touchSource = null;
+let touchStartY = 0;
+
+function onTouchStartBank(e) {
+  if (checked) return;
+  e.preventDefault();
+  const card = e.target.closest('.card');
+  touchCardId = parseInt(card.dataset.id);
+  touchSource = 'bank';
+  card.classList.add('dragging');
+  showGhost(e.touches[0], touchCardId);
+  document.addEventListener('touchmove', onTouchMove, { passive: false });
+  document.addEventListener('touchend', onTouchEnd);
+}
+
+function onTouchStartSlot(e, slotIdx) {
+  if (checked) return;
+  e.preventDefault();
+  const card = e.target.closest('.card');
+  touchCardId = slotContents[slotIdx];
+  touchSource = slotIdx;
+  card.classList.add('dragging');
+  showGhost(e.touches[0], touchCardId);
+  document.addEventListener('touchmove', onTouchMove, { passive: false });
+  document.addEventListener('touchend', onTouchEnd);
+}
+
+function onTouchMove(e) {
+  e.preventDefault();
+  if (ghost) moveGhost(e.touches[0]);
+  // Highlight slot under finger
+  document.querySelectorAll('.slot.drag-over').forEach(s => s.classList.remove('drag-over'));
+  const el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+  if (el) {
+    const slot = el.closest('.slot');
+    if (slot) slot.classList.add('drag-over');
+  }
+}
+
+function onTouchEnd(e) {
+  document.removeEventListener('touchmove', onTouchMove);
+  document.removeEventListener('touchend', onTouchEnd);
+  hideGhost();
+  document.querySelectorAll('.card.dragging').forEach(c => c.classList.remove('dragging'));
+
+  const touch = e.changedTouches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+
+  if (el) {
+    const slot = el.closest('.slot');
+    const bank = el.closest('.card-bank');
+
+    if (slot) {
+      const slotIdx = parseInt(slot.dataset.slot);
+      const existingCard = slotContents[slotIdx];
+
+      if (touchSource === 'bank') {
+        bankCards = bankCards.filter(id => id !== touchCardId);
+        if (existingCard !== null) bankCards.push(existingCard);
+        slotContents[slotIdx] = touchCardId;
+      } else if (typeof touchSource === 'number') {
+        slotContents[touchSource] = existingCard !== null ? existingCard : null;
+        slotContents[slotIdx] = touchCardId;
+      }
+    } else if (bank && typeof touchSource === 'number') {
+      slotContents[touchSource] = null;
+      bankCards.push(touchCardId);
+    }
+  }
+
+  document.querySelectorAll('.slot.drag-over').forEach(s => s.classList.remove('drag-over'));
+  touchCardId = null;
+  touchSource = null;
+  feedbackEl.innerHTML = '';
+  render();
+}
+
+// ── Check / Reset ──
+checkBtn.addEventListener('click', () => {
+  if (checked) return;
+  checked = true;
+  const results = slotContents.map((id, i) => id === i + 1);
+  renderChecked(results);
+  checkBtn.disabled = true;
+});
+
+resetBtn.addEventListener('click', () => {
+  checked = false;
+  slotContents = Array(8).fill(null);
+  bankCards = shuffle(STEPS.map(s => s.id));
+  feedbackEl.innerHTML = '';
+  render();
+});
+
+// ── Init ──
+bankCards = shuffle(STEPS.map(s => s.id));
+render();
+</script>
+</body>
+</html>
