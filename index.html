@@ -257,6 +257,9 @@
   @media (max-width: 700px) {
     header { padding: 16px 16px 0; }
     header h1 { font-size: 18px; }
+    #timerSection { margin-top: 12px; padding: 12px; }
+    #timerDisplay { font-size: 24px; }
+    .time-btn { padding: 7px 14px; font-size: 12px; }
     .desktop-hint { display: none; }
     .mobile-hint { display: inline; }
 
@@ -310,7 +313,57 @@
     <span class="desktop-hint">Drag cards into the correct order, or click to select then click a slot. Place all 8, then check.</span>
     <span class="mobile-hint">Tap a card, then tap the step where it belongs. Place all 8, then check.</span>
   </p>
+
+  <!-- Timer section -->
+  <div id="timerSection" style="margin-top: 16px; padding: 14px; background: rgba(79,109,245,0.05); border-radius: 10px; border: 1px solid rgba(79,109,245,0.15);">
+    <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-light); margin-bottom: 10px;">Challenge Mode</div>
+    <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+      <button class="time-btn" data-time="30">30s</button>
+      <button class="time-btn" data-time="60">1m</button>
+      <button class="time-btn" data-time="120">2m</button>
+    </div>
+    <div id="timerDisplay" style="font-size: 28px; font-weight: 700; text-align: center; letter-spacing: 1px; color: var(--accent); font-variant-numeric: tabular-nums; display: none; margin-bottom: 10px;">--:--</div>
+    <button id="timerStartBtn" class="btn btn-accent" style="width: 100%; display: none;">Start Timer</button>
+  </div>
 </header>
+
+<style>
+  .time-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-mid);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .time-btn:hover { border-color: var(--border-hover); background: var(--bg); }
+  .time-btn.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); font-weight: 700; }
+
+  .btn-accent {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-accent:hover { background: #3d5be3; }
+  .btn-accent:disabled { background: #c5cde8; cursor: not-allowed; }
+
+  #timerDisplay.warning { color: #f59e0b; }
+  #timerDisplay.danger { color: var(--error); animation: pulse-danger 0.6s infinite; }
+
+  @keyframes pulse-danger {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+</style>
 
 <div class="layout">
   <div>
@@ -353,6 +406,12 @@ let selectedSource = null;   // 'bank' | slot index
 let dragCardId = null;
 let dragSource = null;
 let ghost = null;
+
+// Timer state
+let timerSeconds = 0;
+let timerRunning = false;
+let timerInterval = null;
+let selectedTimerDuration = null;
 
 // ── Audio ──
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -418,6 +477,52 @@ function playPlace() {
   osc.connect(gain).connect(audioCtx.destination);
   osc.start(now);
   osc.stop(now + 0.12);
+}
+
+// ── Timer ──
+function formatTime(secs) {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function updateTimerDisplay() {
+  const display = document.getElementById('timerDisplay');
+  display.textContent = formatTime(timerSeconds);
+  display.classList.remove('warning', 'danger');
+  if (timerSeconds <= 10) display.classList.add('danger');
+  else if (timerSeconds <= 30) display.classList.add('warning');
+}
+
+function stopTimer() {
+  timerRunning = false;
+  if (timerInterval) clearInterval(timerInterval);
+}
+
+function tick() {
+  timerSeconds--;
+  updateTimerDisplay();
+  if (timerSeconds <= 0) {
+    stopTimer();
+    timerSeconds = 0;
+    updateTimerDisplay();
+    feedbackEl.innerHTML = '<div class="feedback-msg error">Time\'s up! Reset to try again.</div>';
+    playError();
+    disableUI();
+  }
+}
+
+function disableUI() {
+  checkBtn.disabled = true;
+  bankEl.querySelectorAll('.card').forEach(c => c.style.pointerEvents = 'none');
+  slotListEl.querySelectorAll('.slot').forEach(s => s.style.pointerEvents = 'none');
+}
+
+function enableUI() {
+  const allPlaced = slotContents.every(s => s !== null);
+  checkBtn.disabled = !allPlaced || checked;
+  bankEl.querySelectorAll('.card').forEach(c => c.style.pointerEvents = 'auto');
+  slotListEl.querySelectorAll('.slot').forEach(s => s.style.pointerEvents = 'auto');
 }
 
 // ── Confetti ──
@@ -544,10 +649,12 @@ function renderChecked(results) {
     feedbackEl.innerHTML = '<div class="feedback-msg success">All correct!</div>';
     playSuccess();
     burstConfetti();
+    stopTimer();  // Stop timer on success
   } else {
     slots.forEach(s => s.classList.add('incorrect'));
     feedbackEl.innerHTML = '<div class="feedback-msg error">Not quite. Try again!</div>';
     playError();
+    // Timer keeps going on failure
   }
   slotListEl.querySelectorAll('.card').forEach(c => { c.draggable = false; c.style.cursor = 'default'; });
 }
@@ -734,7 +841,14 @@ resetBtn.addEventListener('click', () => {
   bankCards = shuffle(STEPS.map(s => s.id));
   assignRotations();
   clearSelection();
+  stopTimer();
+  timerSeconds = 0;
+  selectedTimerDuration = null;
   feedbackEl.innerHTML = '';
+  document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('timerDisplay').style.display = 'none';
+  document.getElementById('timerStartBtn').style.display = 'none';
+  enableUI();
   render();
 });
 
@@ -745,6 +859,31 @@ document.addEventListener('click', (e) => {
     clearSelection();
     render();
   }
+});
+
+// ── Timer buttons ──
+document.querySelectorAll('.time-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (checked || timerRunning) return;
+    const duration = parseInt(btn.dataset.time);
+    selectedTimerDuration = duration;
+    timerSeconds = duration;
+    document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('timerDisplay').style.display = 'block';
+    document.getElementById('timerStartBtn').style.display = 'block';
+    updateTimerDisplay();
+  });
+});
+
+document.getElementById('timerStartBtn').addEventListener('click', () => {
+  if (timerRunning || selectedTimerDuration === null) return;
+  timerRunning = true;
+  document.getElementById('timerStartBtn').textContent = 'Timer Running...';
+  document.getElementById('timerStartBtn').disabled = true;
+  document.querySelectorAll('.time-btn').forEach(b => b.disabled = true);
+  timerInterval = setInterval(tick, 1000);
+  enableUI();
 });
 
 // ── Init ──
