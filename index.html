@@ -318,12 +318,14 @@
   <div id="timerSection" style="margin-top: 16px; padding: 14px; background: rgba(79,109,245,0.05); border-radius: 10px; border: 1px solid rgba(79,109,245,0.15);">
     <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-light); margin-bottom: 10px;">Challenge Mode</div>
     <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+      <button class="time-btn active" data-time="none">No Timer</button>
       <button class="time-btn" data-time="30">30s</button>
       <button class="time-btn" data-time="60">1m</button>
       <button class="time-btn" data-time="120">2m</button>
     </div>
     <div id="timerDisplay" style="font-size: 28px; font-weight: 700; text-align: center; letter-spacing: 1px; color: var(--accent); font-variant-numeric: tabular-nums; display: none; margin-bottom: 10px;">--:--</div>
     <button id="timerStartBtn" class="btn btn-accent" style="width: 100%; display: none;">Start Timer</button>
+    <div id="noTimerMsg" style="text-align: center; font-size: 13px; color: var(--text-mid); margin-top: 8px;">No timer active. Play at your own pace.</div>
   </div>
 </header>
 
@@ -846,8 +848,13 @@ resetBtn.addEventListener('click', () => {
   selectedTimerDuration = null;
   feedbackEl.innerHTML = '';
   document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.time-btn[data-time="none"]').classList.add('active');
   document.getElementById('timerDisplay').style.display = 'none';
   document.getElementById('timerStartBtn').style.display = 'none';
+  document.getElementById('timerStartBtn').textContent = 'Start Timer';
+  document.getElementById('timerStartBtn').disabled = false;
+  document.getElementById('noTimerMsg').style.display = 'block';
+  document.querySelectorAll('.time-btn').forEach(b => b.disabled = false);
   enableUI();
   render();
 });
@@ -865,14 +872,26 @@ document.addEventListener('click', (e) => {
 document.querySelectorAll('.time-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     if (checked || timerRunning) return;
-    const duration = parseInt(btn.dataset.time);
-    selectedTimerDuration = duration;
-    timerSeconds = duration;
+    const timeData = btn.dataset.time;
     document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById('timerDisplay').style.display = 'block';
-    document.getElementById('timerStartBtn').style.display = 'block';
-    updateTimerDisplay();
+
+    if (timeData === 'none') {
+      selectedTimerDuration = null;
+      timerSeconds = 0;
+      document.getElementById('timerDisplay').style.display = 'none';
+      document.getElementById('timerStartBtn').style.display = 'none';
+      document.getElementById('noTimerMsg').style.display = 'block';
+      enableUI();
+    } else {
+      const duration = parseInt(timeData);
+      selectedTimerDuration = duration;
+      timerSeconds = duration;
+      document.getElementById('timerDisplay').style.display = 'block';
+      document.getElementById('timerStartBtn').style.display = 'block';
+      document.getElementById('noTimerMsg').style.display = 'none';
+      updateTimerDisplay();
+    }
   });
 });
 
