@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 <title>Action Potential Sequencer</title>
 <style>
   :root {
-    --bg: #f7f8fc;
+    --bg: #f4f5fa;
     --surface: #ffffff;
-    --border: #e2e5ed;
-    --border-hover: #c5c9d6;
+    --border: #dfe2ec;
+    --border-hover: #c0c5d6;
     --text: #1a1d2b;
     --text-mid: #4a5068;
     --text-light: #8890a5;
@@ -17,195 +17,155 @@
     --accent-light: #eef1fe;
     --success: #22c55e;
     --success-bg: #f0fdf4;
-    --success-border: #bbf7d0;
+    --success-border: #86efac;
     --error: #ef4444;
     --error-bg: #fef2f2;
-    --error-border: #fecaca;
-    --slot-empty: #f1f3f9;
-    --slot-border: #d5dae6;
-    --slot-hover: #e8ebf5;
-    --card-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --card-shadow-drag: 0 12px 28px rgba(79,109,245,0.18), 0 4px 10px rgba(0,0,0,0.08);
+    --error-border: #fca5a5;
+    --slot-empty: #f0f2f8;
+    --slot-border: #cdd2e0;
+    --card-shadow: 0 2px 5px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --card-shadow-lift: 0 8px 24px rgba(79,109,245,0.16), 0 3px 8px rgba(0,0,0,0.06);
     --radius: 10px;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
+    min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
   }
 
+  /* ── Header ── */
   header {
-    padding: 28px 40px 0;
+    padding: 20px 20px 0;
     max-width: 1120px;
     margin: 0 auto;
   }
+  header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  header p { font-size: 13px; color: var(--text-mid); margin-top: 3px; line-height: 1.45; }
+  .mobile-hint { display: none; }
 
-  header h1 {
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.3px;
-    color: var(--text);
-  }
-
-  header p {
-    font-size: 14px;
-    color: var(--text-mid);
-    margin-top: 4px;
-    line-height: 1.5;
-  }
-
+  /* ── Desktop layout ── */
   .layout {
     max-width: 1120px;
-    margin: 24px auto 0;
-    padding: 0 40px 40px;
+    margin: 20px auto 0;
+    padding: 0 20px 16px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 32px;
+    gap: 28px;
     align-items: start;
   }
-
   .column-label {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: 1.5px;
     text-transform: uppercase;
     color: var(--text-light);
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
-  /* Card Bank (left) */
+  /* ── Card Bank (jumbled) ── */
   .card-bank {
-    min-height: 200px;
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 8px;
+    padding: 12px;
+    min-height: 120px;
+    background: rgba(0,0,0,0.015);
+    border: 1.5px dashed rgba(0,0,0,0.06);
+    border-radius: 14px;
+  }
+  .card-bank .card {
+    flex: 0 0 auto;
+    width: calc(50% - 4px);
   }
 
+  /* ── Card ── */
   .card {
     background: var(--surface);
     border: 1.5px solid var(--border);
     border-radius: var(--radius);
-    padding: 14px 18px;
-    font-size: 14px;
-    line-height: 1.5;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.45;
     color: var(--text);
-    cursor: grab;
+    cursor: pointer;
     user-select: none;
-    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s, opacity 0.15s;
     box-shadow: var(--card-shadow);
-    position: relative;
+    transition: border-color 0.15s, box-shadow 0.2s, transform 0.2s, opacity 0.2s;
+    -webkit-user-select: none;
+  }
+  .card:hover { border-color: var(--border-hover); }
+  .card.selected {
+    border-color: var(--accent);
+    box-shadow: var(--card-shadow-lift);
+    transform: scale(1.02);
+    background: var(--accent-light);
+  }
+  .card.dragging { opacity: 0.35; transform: scale(0.97); }
+  .card.placed-in-slot {
+    border-color: var(--accent);
+    background: var(--accent-light);
   }
 
-  .card:hover {
-    border-color: var(--border-hover);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  }
-
-  .card.dragging {
-    opacity: 0.4;
-    transform: scale(0.97);
-  }
-
-  .card .drag-handle {
-    display: inline-block;
-    width: 14px;
-    margin-right: 10px;
-    color: var(--text-light);
-    font-size: 16px;
-    vertical-align: middle;
-    flex-shrink: 0;
-  }
-
-  /* Slot area (right) */
-  .slot-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
+  /* ── Slot list ── */
+  .slot-list { display: flex; flex-direction: column; gap: 6px; }
   .slot {
     background: var(--slot-empty);
     border: 2px dashed var(--slot-border);
     border-radius: var(--radius);
-    min-height: 52px;
-    padding: 4px;
+    min-height: 48px;
+    padding: 3px;
     display: flex;
     align-items: center;
-    transition: background 0.15s, border-color 0.15s;
     position: relative;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+    cursor: pointer;
   }
-
   .slot .slot-label {
     position: absolute;
-    left: 16px;
+    left: 14px;
     font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     color: var(--text-light);
     pointer-events: none;
     transition: opacity 0.15s;
   }
-
-  .slot.has-card .slot-label {
-    opacity: 0;
+  .slot.has-card .slot-label { opacity: 0; }
+  .slot.highlight {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    transform: scale(1.01);
   }
-
   .slot.drag-over {
     background: var(--accent-light);
     border-color: var(--accent);
   }
-
   .slot .card {
     width: 100%;
     margin: 0;
-    border-color: var(--accent);
-    background: var(--accent-light);
+    cursor: pointer;
   }
 
-  .slot .card:hover {
-    border-color: var(--accent);
-  }
+  /* Check result states */
+  .slot.correct { border-style: solid; border-color: var(--success-border); background: var(--success-bg); }
+  .slot.correct .card { border-color: var(--success); background: var(--success-bg); color: #166534; }
+  .slot.incorrect { border-style: solid; border-color: var(--error-border); background: var(--error-bg); }
+  .slot.incorrect .card { border-color: var(--error); background: var(--error-bg); color: #991b1b; }
 
-  /* Success / Error states on slots */
-  .slot.correct {
-    border-style: solid;
-    border-color: var(--success-border);
-    background: var(--success-bg);
-  }
-
-  .slot.correct .card {
-    border-color: var(--success);
-    background: var(--success-bg);
-    color: #166534;
-  }
-
-  .slot.incorrect {
-    border-style: solid;
-    border-color: var(--error-border);
-    background: var(--error-bg);
-  }
-
-  .slot.incorrect .card {
-    border-color: var(--error);
-    background: var(--error-bg);
-    color: #991b1b;
-  }
-
-  /* Buttons */
+  /* ── Buttons ── */
   .actions {
     max-width: 1120px;
     margin: 0 auto;
-    padding: 0 40px 48px;
+    padding: 0 20px 36px;
     display: flex;
-    gap: 12px;
+    gap: 10px;
     justify-content: center;
   }
-
   .btn {
     font-family: inherit;
     font-size: 14px;
@@ -214,130 +174,131 @@
     border-radius: 8px;
     border: none;
     cursor: pointer;
-    transition: background 0.15s, transform 0.05s, opacity 0.15s;
+    transition: background 0.15s, transform 0.05s;
+    -webkit-tap-highlight-color: transparent;
   }
-
-  .btn:active { transform: scale(0.97); }
-
-  .btn-primary {
-    background: var(--accent);
-    color: white;
-  }
-
+  .btn:active { transform: scale(0.96); }
+  .btn-primary { background: var(--accent); color: white; }
   .btn-primary:hover { background: #3d5be3; }
-  .btn-primary:disabled {
-    background: #c5cde8;
-    cursor: not-allowed;
-  }
+  .btn-primary:disabled { background: #c5cde8; cursor: not-allowed; }
+  .btn-secondary { background: var(--surface); color: var(--text-mid); border: 1.5px solid var(--border); }
+  .btn-secondary:hover { background: var(--bg); border-color: var(--border-hover); }
 
-  .btn-secondary {
-    background: var(--surface);
-    color: var(--text-mid);
-    border: 1.5px solid var(--border);
-  }
-
-  .btn-secondary:hover {
-    background: var(--bg);
-    border-color: var(--border-hover);
-  }
-
-  /* Feedback banner */
+  /* ── Feedback ── */
   .feedback {
     max-width: 1120px;
-    margin: -8px auto 16px;
-    padding: 0 40px;
+    margin: 0 auto 12px;
+    padding: 0 20px;
     text-align: center;
-    min-height: 44px;
+    min-height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
   }
-
   .feedback-msg {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
-    padding: 10px 24px;
+    padding: 9px 22px;
     border-radius: 8px;
-    animation: feedbackIn 0.3s ease;
+    animation: popIn 0.3s ease;
+  }
+  .feedback-msg.success { background: var(--success-bg); color: #166534; border: 1px solid var(--success-border); }
+  .feedback-msg.error { background: var(--error-bg); color: #991b1b; border: 1px solid var(--error-border); }
+  @keyframes popIn {
+    from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  .feedback-msg.success {
-    background: var(--success-bg);
-    color: #166534;
-    border: 1px solid var(--success-border);
-  }
-
-  .feedback-msg.error {
-    background: var(--error-bg);
-    color: #991b1b;
-    border: 1px solid var(--error-border);
-  }
-
-  @keyframes feedbackIn {
-    from { opacity: 0; transform: translateY(-6px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Success confetti burst */
-  .confetti-container {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 1000;
-    overflow: hidden;
-  }
-
+  /* ── Confetti ── */
+  .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 1000; overflow: hidden; }
   .confetti-piece {
     position: absolute;
-    width: 8px;
-    height: 8px;
     border-radius: 2px;
     animation: confettiFall 1.5s ease-out forwards;
   }
-
   @keyframes confettiFall {
     0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
     100% { transform: translateY(100vh) rotate(720deg) scale(0.3); opacity: 0; }
   }
 
-  /* Ghost card being dragged */
+  /* ── Drag ghost (desktop only) ── */
   .drag-ghost {
     position: fixed;
     pointer-events: none;
     z-index: 9999;
     opacity: 0.92;
-    transform: rotate(2deg) scale(1.04);
-    box-shadow: var(--card-shadow-drag);
+    transform: rotate(1.5deg) scale(1.03);
+    box-shadow: var(--card-shadow-lift);
     background: var(--surface);
     border: 1.5px solid var(--accent);
     border-radius: var(--radius);
-    padding: 14px 18px;
-    font-size: 14px;
-    line-height: 1.5;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.45;
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
-    max-width: 480px;
+    font-family: inherit;
+    max-width: 420px;
   }
 
-  .drag-ghost .drag-handle {
-    display: inline-block;
-    width: 14px;
-    margin-right: 10px;
-    color: var(--text-light);
-    font-size: 16px;
-    vertical-align: middle;
-  }
+  /* ── Jumbled rotations ── */
+  .card-bank .card.rot-1 { transform: rotate(-1.5deg); }
+  .card-bank .card.rot-2 { transform: rotate(1.2deg); }
+  .card-bank .card.rot-3 { transform: rotate(-0.8deg); }
+  .card-bank .card.rot-4 { transform: rotate(2deg); }
+  .card-bank .card.rot-5 { transform: rotate(-2.2deg); }
+  .card-bank .card.rot-6 { transform: rotate(0.7deg); }
+  .card-bank .card.rot-7 { transform: rotate(-1.8deg); }
+  .card-bank .card.rot-8 { transform: rotate(1.5deg); }
+  .card-bank .card.selected { transform: scale(1.02) rotate(0deg) !important; }
 
-  /* Responsive */
-  @media (max-width: 860px) {
+  /* ═══════════════════════════════════════════
+     MOBILE: stacked layout, tap interaction
+     ═══════════════════════════════════════════ */
+  @media (max-width: 700px) {
+    header { padding: 16px 16px 0; }
+    header h1 { font-size: 18px; }
+    .desktop-hint { display: none; }
+    .mobile-hint { display: inline; }
+
     .layout {
       grid-template-columns: 1fr;
-      gap: 24px;
-      padding: 0 20px 24px;
+      gap: 16px;
+      padding: 0 12px 12px;
+      margin-top: 14px;
     }
-    header { padding: 20px 20px 0; }
-    .actions { padding: 0 20px 32px; }
-    .feedback { padding: 0 20px; }
+
+    .card-bank {
+      padding: 10px;
+      gap: 6px;
+    }
+    .card-bank .card {
+      width: 100%;
+      flex: 0 0 100%;
+      font-size: 13px;
+      padding: 11px 12px;
+    }
+
+    .slot { min-height: 44px; padding: 2px; }
+    .slot .slot-label { font-size: 11px; left: 12px; }
+    .slot .card { font-size: 13px; padding: 10px 12px; }
+
+    .actions { padding: 0 12px 28px; }
+    .btn { padding: 12px 20px; font-size: 14px; flex: 1; }
+    .feedback { padding: 0 12px; margin-bottom: 10px; }
+    .feedback-msg { font-size: 13px; padding: 8px 16px; }
+
+    /* On mobile, hide drag ghost */
+    .drag-ghost { display: none !important; }
+  }
+
+  /* Larger desktop */
+  @media (min-width: 1000px) {
+    header { padding: 28px 40px 0; }
+    .layout { padding: 0 40px 20px; }
+    .actions { padding: 0 40px 48px; }
+    .feedback { padding: 0 40px; }
+    .card-bank .card { font-size: 14px; padding: 14px 16px; }
+    .slot .card { font-size: 14px; padding: 13px 16px; }
   }
 </style>
 </head>
@@ -345,7 +306,10 @@
 
 <header>
   <h1>Action Potential Sequencer</h1>
-  <p>Drag each card into the correct step. Place all 8, then check your order.</p>
+  <p>
+    <span class="desktop-hint">Drag cards into the correct order, or click to select then click a slot. Place all 8, then check.</span>
+    <span class="mobile-hint">Tap a card, then tap the step where it belongs. Place all 8, then check.</span>
+  </p>
 </header>
 
 <div class="layout">
@@ -367,61 +331,37 @@
 </div>
 
 <script>
-// ── Step data ──
 const STEPS = [
-  {
-    id: 1,
-    text: "The Na\u207A/K\u207A pump uses ATP to move 3 Na\u207A out and 2 K\u207A in."
-  },
-  {
-    id: 2,
-    text: "The neuron rests at \u221270 mV. All voltage-gated channels are closed."
-  },
-  {
-    id: 3,
-    text: "A stimulus pushes positive charge in, raising voltage toward threshold (\u221255 mV)."
-  },
-  {
-    id: 4,
-    text: "Na\u207A channels open. Na\u207A rushes in and the inside goes positive. (Depolarization)"
-  },
-  {
-    id: 5,
-    text: "Na\u207A channels lock shut (inactivate). They can\u2019t reopen, so the signal can\u2019t go backward."
-  },
-  {
-    id: 6,
-    text: "K\u207A channels open slowly. K\u207A flows out, voltage drops back down. (Repolarization)"
-  },
-  {
-    id: 7,
-    text: "Trapped Na\u207A inside repels other Na\u207A sideways, pushing charge toward the next patch."
-  },
-  {
-    id: 8,
-    text: "That charge hits the next patch, crosses threshold, and its Na\u207A channels open. The signal propagates."
-  }
+  { id: 1, text: "The Na\u207A/K\u207A pump uses ATP to move 3 Na\u207A out and 2 K\u207A in." },
+  { id: 2, text: "The neuron rests at \u221270 mV. All voltage-gated channels are closed." },
+  { id: 3, text: "A stimulus pushes positive charge in, raising voltage toward threshold (\u221255 mV)." },
+  { id: 4, text: "Na\u207A channels open. Na\u207A rushes in and the inside goes positive. (Depolarization)" },
+  { id: 5, text: "Na\u207A channels lock shut (inactivate). They can\u2019t reopen, so the signal can\u2019t go backward." },
+  { id: 6, text: "K\u207A channels open slowly. K\u207A flows out, voltage drops back down. (Repolarization)" },
+  { id: 7, text: "Trapped Na\u207A inside repels other Na\u207A sideways, pushing charge toward the next patch." },
+  { id: 8, text: "That charge hits the next patch, crosses threshold, and its Na\u207A channels open. The signal propagates." }
 ];
 
 // ── State ──
-let slotContents = Array(8).fill(null); // card id in each slot
-let bankCards = []; // card ids still in bank
+let slotContents = Array(8).fill(null);
+let bankCards = [];
 let checked = false;
+let selectedCardId = null;   // tap-to-place: which card is selected
+let selectedSource = null;   // 'bank' | slot index
+
+// Drag state (desktop)
 let dragCardId = null;
-let dragSource = null; // 'bank' | slot index
+let dragSource = null;
 let ghost = null;
 
 // ── Audio ──
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
-function ensureAudio() {
-  if (!audioCtx) audioCtx = new AudioCtx();
-}
+function ensureAudio() { if (!audioCtx) audioCtx = new AudioCtx(); }
 
 function playSuccess() {
   ensureAudio();
   const now = audioCtx.currentTime;
-  // pleasant ascending chime
   [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -439,7 +379,6 @@ function playSuccess() {
 function playError() {
   ensureAudio();
   const now = audioCtx.currentTime;
-  // short low buzz
   [180, 160].forEach((freq, i) => {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -453,25 +392,53 @@ function playError() {
   });
 }
 
+function playTap() {
+  ensureAudio();
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = 880;
+  gain.gain.setValueAtTime(0.08, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.08);
+}
+
+function playPlace() {
+  ensureAudio();
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = 660;
+  gain.gain.setValueAtTime(0.1, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.12);
+}
+
 // ── Confetti ──
 function burstConfetti() {
-  const container = document.createElement('div');
-  container.className = 'confetti-container';
-  document.body.appendChild(container);
-  const colors = ['#4f6df5', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+  const c = document.createElement('div');
+  c.className = 'confetti-container';
+  document.body.appendChild(c);
+  const colors = ['#4f6df5','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4'];
   for (let i = 0; i < 60; i++) {
-    const piece = document.createElement('div');
-    piece.className = 'confetti-piece';
-    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-    piece.style.left = (20 + Math.random() * 60) + '%';
-    piece.style.top = '-10px';
-    piece.style.animationDelay = (Math.random() * 0.4) + 's';
-    piece.style.animationDuration = (1 + Math.random() * 1) + 's';
-    piece.style.width = (6 + Math.random() * 6) + 'px';
-    piece.style.height = (6 + Math.random() * 4) + 'px';
-    container.appendChild(piece);
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.left = (15 + Math.random() * 70) + '%';
+    p.style.top = '-10px';
+    p.style.animationDelay = (Math.random() * 0.4) + 's';
+    p.style.animationDuration = (1 + Math.random() * 1) + 's';
+    p.style.width = (6 + Math.random() * 6) + 'px';
+    p.style.height = (6 + Math.random() * 4) + 'px';
+    c.appendChild(p);
   }
-  setTimeout(() => container.remove(), 2500);
+  setTimeout(() => c.remove(), 2500);
 }
 
 // ── Shuffle ──
@@ -484,7 +451,14 @@ function shuffle(arr) {
   return a;
 }
 
-// ── Render ──
+// ── Rotation classes for jumble ──
+let rotationMap = {};
+function assignRotations() {
+  const rots = shuffle([1,2,3,4,5,6,7,8]);
+  STEPS.forEach((s, i) => { rotationMap[s.id] = rots[i]; });
+}
+
+// ── DOM refs ──
 const bankEl = document.getElementById('cardBank');
 const slotListEl = document.getElementById('slotList');
 const feedbackEl = document.getElementById('feedback');
@@ -493,32 +467,49 @@ const resetBtn = document.getElementById('resetBtn');
 
 function getStep(id) { return STEPS.find(s => s.id === id); }
 
-function createCardEl(id) {
+function createBankCard(id) {
   const step = getStep(id);
   const el = document.createElement('div');
-  el.className = 'card';
+  el.className = 'card rot-' + rotationMap[id];
   el.dataset.id = id;
   el.draggable = true;
-  el.innerHTML = '<span class="drag-handle">\u2261</span>' + step.text;
+  el.textContent = step.text;
+  if (selectedCardId === id && selectedSource === 'bank') el.classList.add('selected');
   return el;
 }
 
+function createSlotCard(id) {
+  const step = getStep(id);
+  const el = document.createElement('div');
+  el.className = 'card placed-in-slot';
+  el.dataset.id = id;
+  el.draggable = true;
+  el.textContent = step.text;
+  return el;
+}
+
+// ── Render ──
 function render() {
-  // Bank
   bankEl.innerHTML = '';
   bankCards.forEach(id => {
-    const card = createCardEl(id);
+    const card = createBankCard(id);
+    // Desktop drag
     card.addEventListener('dragstart', onDragStartBank);
-    card.addEventListener('touchstart', onTouchStartBank, { passive: false });
+    // Tap select
+    card.addEventListener('click', () => onTapBankCard(id));
     bankEl.appendChild(card);
   });
 
-  // Slots
   slotListEl.innerHTML = '';
   for (let i = 0; i < 8; i++) {
     const slot = document.createElement('div');
     slot.className = 'slot' + (slotContents[i] !== null ? ' has-card' : '');
     slot.dataset.slot = i;
+
+    // Highlight if we have a selection and this slot is a valid target
+    if (selectedCardId !== null && slotContents[i] === null) {
+      slot.classList.add('highlight');
+    }
 
     const label = document.createElement('div');
     label.className = 'slot-label';
@@ -526,58 +517,119 @@ function render() {
     slot.appendChild(label);
 
     if (slotContents[i] !== null) {
-      const card = createCardEl(slotContents[i]);
+      const card = createSlotCard(slotContents[i]);
       card.addEventListener('dragstart', (e) => onDragStartSlot(e, i));
-      card.addEventListener('touchstart', (e) => onTouchStartSlot(e, i), { passive: false });
+      card.addEventListener('click', (e) => { e.stopPropagation(); onTapSlotCard(i); });
       slot.appendChild(card);
     }
 
+    // Desktop drop
     slot.addEventListener('dragover', onDragOver);
     slot.addEventListener('dragleave', onDragLeave);
     slot.addEventListener('drop', (e) => onDrop(e, i));
+    // Tap place
+    slot.addEventListener('click', () => onTapSlot(i));
     slotListEl.appendChild(slot);
   }
 
-  // Check button state
   const allPlaced = slotContents.every(s => s !== null);
   checkBtn.disabled = !allPlaced || checked;
 }
 
 function renderChecked(results) {
-  const slots = slotListEl.querySelectorAll('.slot');
-  slots.forEach((slot, i) => {
-    slot.classList.remove('correct', 'incorrect');
-    // On success, mark all green. On failure, mark all red (no individual hints).
-  });
-
   const allCorrect = results.every(r => r);
-
+  const slots = slotListEl.querySelectorAll('.slot');
   if (allCorrect) {
     slots.forEach(s => s.classList.add('correct'));
-    feedbackEl.innerHTML = '<div class="feedback-msg success">All correct! You nailed the sequence.</div>';
+    feedbackEl.innerHTML = '<div class="feedback-msg success">All correct!</div>';
     playSuccess();
     burstConfetti();
   } else {
     slots.forEach(s => s.classList.add('incorrect'));
-    feedbackEl.innerHTML = '<div class="feedback-msg error">Not quite right. Try again!</div>';
+    feedbackEl.innerHTML = '<div class="feedback-msg error">Not quite. Try again!</div>';
     playError();
   }
-
-  // Disable dragging after check
-  slotListEl.querySelectorAll('.card').forEach(c => {
-    c.draggable = false;
-    c.style.cursor = 'default';
-  });
+  slotListEl.querySelectorAll('.card').forEach(c => { c.draggable = false; c.style.cursor = 'default'; });
 }
 
-// ── Drag & Drop (mouse) ──
+// ══════════════════════════════════════
+// TAP-TO-PLACE (works on all devices)
+// ══════════════════════════════════════
+function clearSelection() {
+  selectedCardId = null;
+  selectedSource = null;
+}
+
+function onTapBankCard(id) {
+  if (checked) return;
+  feedbackEl.innerHTML = '';
+  if (selectedCardId === id && selectedSource === 'bank') {
+    clearSelection();
+  } else {
+    selectedCardId = id;
+    selectedSource = 'bank';
+    playTap();
+  }
+  render();
+}
+
+function onTapSlotCard(slotIdx) {
+  if (checked) return;
+  feedbackEl.innerHTML = '';
+  const cardId = slotContents[slotIdx];
+
+  if (selectedCardId !== null) {
+    // We have a selection: swap or place
+    if (selectedSource === 'bank') {
+      bankCards = bankCards.filter(i => i !== selectedCardId);
+      bankCards.push(cardId);
+      slotContents[slotIdx] = selectedCardId;
+      playPlace();
+    } else if (typeof selectedSource === 'number' && selectedSource !== slotIdx) {
+      // Swap two slots
+      slotContents[selectedSource] = cardId;
+      slotContents[slotIdx] = selectedCardId;
+      playPlace();
+    }
+    clearSelection();
+  } else {
+    // Select this slot's card
+    selectedCardId = cardId;
+    selectedSource = slotIdx;
+    playTap();
+  }
+  render();
+}
+
+function onTapSlot(slotIdx) {
+  if (checked || selectedCardId === null) return;
+  feedbackEl.innerHTML = '';
+
+  const existingCard = slotContents[slotIdx];
+
+  if (selectedSource === 'bank') {
+    bankCards = bankCards.filter(i => i !== selectedCardId);
+    if (existingCard !== null) bankCards.push(existingCard);
+    slotContents[slotIdx] = selectedCardId;
+  } else if (typeof selectedSource === 'number') {
+    slotContents[selectedSource] = existingCard;
+    slotContents[slotIdx] = selectedCardId;
+  }
+  playPlace();
+  clearSelection();
+  render();
+}
+
+// ══════════════════════════════════════
+// DRAG & DROP (desktop)
+// ══════════════════════════════════════
 function onDragStartBank(e) {
   if (checked) return e.preventDefault();
+  clearSelection();
   dragCardId = parseInt(e.target.closest('.card').dataset.id);
   dragSource = 'bank';
   e.target.closest('.card').classList.add('dragging');
   e.dataTransfer.effectAllowed = 'move';
-  // Minimal transparent ghost (browser default is fine but we add custom below)
   const img = new Image();
   img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
   e.dataTransfer.setDragImage(img, 0, 0);
@@ -586,6 +638,7 @@ function onDragStartBank(e) {
 
 function onDragStartSlot(e, slotIdx) {
   if (checked) return e.preventDefault();
+  clearSelection();
   dragCardId = slotContents[slotIdx];
   dragSource = slotIdx;
   e.target.closest('.card').classList.add('dragging');
@@ -603,50 +656,34 @@ function onDragOver(e) {
   if (ghost) moveGhost(e);
 }
 
-function onDragLeave(e) {
-  e.currentTarget.classList.remove('drag-over');
-}
+function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
 
 function onDrop(e, slotIdx) {
   e.preventDefault();
   e.currentTarget.classList.remove('drag-over');
   hideGhost();
   if (dragCardId === null) return;
-
-  const existingCard = slotContents[slotIdx];
-
+  const existing = slotContents[slotIdx];
   if (dragSource === 'bank') {
-    // Remove from bank
-    bankCards = bankCards.filter(id => id !== dragCardId);
-    // If slot already has a card, send it to bank
-    if (existingCard !== null) {
-      bankCards.push(existingCard);
-    }
+    bankCards = bankCards.filter(i => i !== dragCardId);
+    if (existing !== null) bankCards.push(existing);
     slotContents[slotIdx] = dragCardId;
   } else if (typeof dragSource === 'number') {
-    // Swap between slots, or slot to slot
-    if (existingCard !== null) {
-      slotContents[dragSource] = existingCard;
-    } else {
-      slotContents[dragSource] = null;
-    }
+    slotContents[dragSource] = existing;
     slotContents[slotIdx] = dragCardId;
   }
-
   dragCardId = null;
   dragSource = null;
   feedbackEl.innerHTML = '';
   render();
 }
 
-// Handle dragend (dropped outside valid target)
 document.addEventListener('dragend', () => {
   hideGhost();
   document.querySelectorAll('.card.dragging').forEach(c => c.classList.remove('dragging'));
   document.querySelectorAll('.slot.drag-over').forEach(s => s.classList.remove('drag-over'));
 });
 
-// Handle dropping card back on the bank
 bankEl.addEventListener('dragover', (e) => {
   e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
@@ -671,109 +708,23 @@ function showGhost(e, cardId) {
   hideGhost();
   ghost = document.createElement('div');
   ghost.className = 'drag-ghost';
-  const step = getStep(cardId);
-  ghost.innerHTML = '<span class="drag-handle">\u2261</span>' + step.text;
+  ghost.textContent = getStep(cardId).text;
   document.body.appendChild(ghost);
   moveGhost(e);
 }
-
 function moveGhost(e) {
   if (!ghost) return;
-  const x = e.clientX || (e.touches && e.touches[0].clientX) || 0;
-  const y = e.clientY || (e.touches && e.touches[0].clientY) || 0;
-  ghost.style.left = (x + 12) + 'px';
-  ghost.style.top = (y - 20) + 'px';
+  ghost.style.left = (e.clientX + 12) + 'px';
+  ghost.style.top = (e.clientY - 16) + 'px';
 }
-
-function hideGhost() {
-  if (ghost) { ghost.remove(); ghost = null; }
-}
-
-// ── Touch support ──
-let touchCardId = null;
-let touchSource = null;
-let touchStartY = 0;
-
-function onTouchStartBank(e) {
-  if (checked) return;
-  e.preventDefault();
-  const card = e.target.closest('.card');
-  touchCardId = parseInt(card.dataset.id);
-  touchSource = 'bank';
-  card.classList.add('dragging');
-  showGhost(e.touches[0], touchCardId);
-  document.addEventListener('touchmove', onTouchMove, { passive: false });
-  document.addEventListener('touchend', onTouchEnd);
-}
-
-function onTouchStartSlot(e, slotIdx) {
-  if (checked) return;
-  e.preventDefault();
-  const card = e.target.closest('.card');
-  touchCardId = slotContents[slotIdx];
-  touchSource = slotIdx;
-  card.classList.add('dragging');
-  showGhost(e.touches[0], touchCardId);
-  document.addEventListener('touchmove', onTouchMove, { passive: false });
-  document.addEventListener('touchend', onTouchEnd);
-}
-
-function onTouchMove(e) {
-  e.preventDefault();
-  if (ghost) moveGhost(e.touches[0]);
-  // Highlight slot under finger
-  document.querySelectorAll('.slot.drag-over').forEach(s => s.classList.remove('drag-over'));
-  const el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
-  if (el) {
-    const slot = el.closest('.slot');
-    if (slot) slot.classList.add('drag-over');
-  }
-}
-
-function onTouchEnd(e) {
-  document.removeEventListener('touchmove', onTouchMove);
-  document.removeEventListener('touchend', onTouchEnd);
-  hideGhost();
-  document.querySelectorAll('.card.dragging').forEach(c => c.classList.remove('dragging'));
-
-  const touch = e.changedTouches[0];
-  const el = document.elementFromPoint(touch.clientX, touch.clientY);
-
-  if (el) {
-    const slot = el.closest('.slot');
-    const bank = el.closest('.card-bank');
-
-    if (slot) {
-      const slotIdx = parseInt(slot.dataset.slot);
-      const existingCard = slotContents[slotIdx];
-
-      if (touchSource === 'bank') {
-        bankCards = bankCards.filter(id => id !== touchCardId);
-        if (existingCard !== null) bankCards.push(existingCard);
-        slotContents[slotIdx] = touchCardId;
-      } else if (typeof touchSource === 'number') {
-        slotContents[touchSource] = existingCard !== null ? existingCard : null;
-        slotContents[slotIdx] = touchCardId;
-      }
-    } else if (bank && typeof touchSource === 'number') {
-      slotContents[touchSource] = null;
-      bankCards.push(touchCardId);
-    }
-  }
-
-  document.querySelectorAll('.slot.drag-over').forEach(s => s.classList.remove('drag-over'));
-  touchCardId = null;
-  touchSource = null;
-  feedbackEl.innerHTML = '';
-  render();
-}
+function hideGhost() { if (ghost) { ghost.remove(); ghost = null; } }
 
 // ── Check / Reset ──
 checkBtn.addEventListener('click', () => {
   if (checked) return;
   checked = true;
-  const results = slotContents.map((id, i) => id === i + 1);
-  renderChecked(results);
+  clearSelection();
+  renderChecked(slotContents.map((id, i) => id === i + 1));
   checkBtn.disabled = true;
 });
 
@@ -781,12 +732,24 @@ resetBtn.addEventListener('click', () => {
   checked = false;
   slotContents = Array(8).fill(null);
   bankCards = shuffle(STEPS.map(s => s.id));
+  assignRotations();
+  clearSelection();
   feedbackEl.innerHTML = '';
   render();
 });
 
+// Click on empty area to deselect
+document.addEventListener('click', (e) => {
+  if (selectedCardId === null) return;
+  if (!e.target.closest('.card') && !e.target.closest('.slot')) {
+    clearSelection();
+    render();
+  }
+});
+
 // ── Init ──
 bankCards = shuffle(STEPS.map(s => s.id));
+assignRotations();
 render();
 </script>
 </body>
