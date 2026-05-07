@@ -6,30 +6,33 @@
 <title>Action Potential Sequencer</title>
 <style>
   :root {
-    --bg: #f4f5fa;
+    --bg: #f5f7fa;
     --surface: #ffffff;
-    --border: #dfe2ec;
-    --border-hover: #c0c5d6;
-    --text: #1a1d2b;
-    --text-mid: #4a5068;
-    --text-light: #8890a5;
-    --accent: #4f6df5;
-    --accent-light: #eef1fe;
-    --success: #22c55e;
-    --success-bg: #f0fdf4;
-    --success-border: #86efac;
-    --error: #ef4444;
-    --error-bg: #fef2f2;
-    --error-border: #fca5a5;
-    --slot-empty: #f0f2f8;
-    --slot-border: #cdd2e0;
-    --card-shadow: 0 2px 5px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --card-shadow-lift: 0 8px 24px rgba(79,109,245,0.16), 0 3px 8px rgba(0,0,0,0.06);
-    --radius: 10px;
+    --border: #e0ebe9;
+    --border-hover: #c4dad6;
+    --text: #1a2d2b;
+    --text-mid: #4a5d5a;
+    --text-light: #8aa39d;
+    --accent: #1A6B6B;
+    --accent-2: #2A9D8F;
+    --accent-light: #e8f1f0;
+    --accent-tint: #f0f5f4;
+    --success: #2A9D8F;
+    --success-bg: #e8f5f3;
+    --success-border: #2A9D8F;
+    --error: #E65C3C;
+    --error-bg: #fce8e4;
+    --error-border: #E65C3C;
+    --gold: #D4A843;
+    --slot-empty: #f0f5f4;
+    --slot-border: #c4dad6;
+    --card-shadow: 0 6px 24px rgba(0,0,0,0.08);
+    --card-shadow-lift: 0 14px 40px rgba(26,107,107,0.18);
+    --radius: 14px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
@@ -38,14 +41,62 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* ── Header ── */
-  header {
-    padding: 20px 20px 0;
-    max-width: 1120px;
-    margin: 0 auto;
+  /* ── Hero Header (matches review-game aesthetic) ── */
+  .hero {
+    background: linear-gradient(135deg, #1A6B6B 0%, #2A9D8F 100%);
+    color: white;
+    padding: 50px 30px 80px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
   }
-  header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
-  header p { font-size: 13px; color: var(--text-mid); margin-top: 3px; line-height: 1.45; }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 2px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+  .hero h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+    position: relative;
+  }
+  .hero p {
+    font-size: 1rem;
+    opacity: 0.94;
+    max-width: 640px;
+    margin: 0 auto;
+    line-height: 1.5;
+    position: relative;
+  }
+  .hero .badge-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+    position: relative;
+  }
+  .hero .badge-row span {
+    background: rgba(255,255,255,0.2);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  header.app-header {
+    max-width: 1120px;
+    margin: -50px auto 0;
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
+  }
   .mobile-hint { display: none; }
 
   /* ── Desktop layout ── */
@@ -86,7 +137,7 @@
   /* ── Card ── */
   .card {
     background: var(--surface);
-    border: 1.5px solid var(--border);
+    border: 2px solid var(--border);
     border-radius: var(--radius);
     padding: 12px 14px;
     font-size: 13px;
@@ -94,13 +145,13 @@
     color: var(--text);
     cursor: pointer;
     user-select: none;
-    box-shadow: var(--card-shadow);
+    box-shadow: 0 2px 8px rgba(26,107,107,0.06);
     transition: border-color 0.15s, box-shadow 0.2s, transform 0.2s, opacity 0.2s;
     -webkit-user-select: none;
   }
-  .card:hover { border-color: var(--border-hover); }
+  .card:hover { border-color: var(--border-hover); box-shadow: 0 4px 14px rgba(26,107,107,0.10); }
   .card.selected {
-    border-color: var(--accent);
+    border-color: var(--accent-2);
     box-shadow: var(--card-shadow-lift);
     transform: scale(1.02);
     background: var(--accent-light);
@@ -178,11 +229,11 @@
     -webkit-tap-highlight-color: transparent;
   }
   .btn:active { transform: scale(0.96); }
-  .btn-primary { background: var(--accent); color: white; }
-  .btn-primary:hover { background: #3d5be3; }
-  .btn-primary:disabled { background: #c5cde8; cursor: not-allowed; }
-  .btn-secondary { background: var(--surface); color: var(--text-mid); border: 1.5px solid var(--border); }
-  .btn-secondary:hover { background: var(--bg); border-color: var(--border-hover); }
+  .btn-primary { background: linear-gradient(135deg, #1A6B6B 0%, #2A9D8F 100%); color: white; }
+  .btn-primary:hover { filter: brightness(1.05); box-shadow: 0 6px 18px rgba(26,107,107,0.28); }
+  .btn-primary:disabled { background: #c4dad6; cursor: not-allowed; filter: none; box-shadow: none; }
+  .btn-secondary { background: var(--accent-tint); color: var(--accent); border: 1.5px solid var(--border); font-weight: 700; }
+  .btn-secondary:hover { background: #dbe8e5; border-color: var(--border-hover); }
 
   /* ── Feedback ── */
   .feedback {
@@ -307,25 +358,32 @@
 </head>
 <body>
 
-<header>
+<section class="hero">
   <h1>Action Potential Sequencer</h1>
   <p>
     <span class="desktop-hint">Drag cards into the correct order, or click to select then click a slot. Place all 8, then check.</span>
     <span class="mobile-hint">Tap a card, then tap the step where it belongs. Place all 8, then check.</span>
   </p>
+  <div class="badge-row">
+    <span>Drag &amp; Drop</span>
+    <span>8 Steps</span>
+    <span>Challenge Timer</span>
+  </div>
+</section>
 
+<header class="app-header">
   <!-- Timer section -->
-  <div id="timerSection" style="margin-top: 16px; padding: 14px; background: rgba(79,109,245,0.05); border-radius: 10px; border: 1px solid rgba(79,109,245,0.15);">
-    <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-light); margin-bottom: 10px;">Challenge Mode</div>
-    <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+  <div id="timerSection" style="padding: 18px 20px; background: white; border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,0.08);">
+    <div style="font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px;">Challenge Mode</div>
+    <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
       <button class="time-btn active" data-time="none">No Timer</button>
       <button class="time-btn" data-time="30">30s</button>
       <button class="time-btn" data-time="60">1m</button>
       <button class="time-btn" data-time="120">2m</button>
     </div>
-    <div id="timerDisplay" style="font-size: 28px; font-weight: 700; text-align: center; letter-spacing: 1px; color: var(--accent); font-variant-numeric: tabular-nums; display: none; margin-bottom: 10px;">--:--</div>
+    <div id="timerDisplay" style="font-size: 32px; font-weight: 700; text-align: center; letter-spacing: 1px; color: var(--accent); font-variant-numeric: tabular-nums; display: none; margin-bottom: 10px;">--:--</div>
     <button id="timerStartBtn" class="btn btn-accent" style="width: 100%; display: none;">Start Timer</button>
-    <div id="noTimerMsg" style="text-align: center; font-size: 13px; color: var(--text-mid); margin-top: 8px;">No timer active. Play at your own pace.</div>
+    <div id="noTimerMsg" style="text-align: center; font-size: 13px; color: var(--text-mid); margin-top: 4px;">No timer active. Play at your own pace.</div>
   </div>
 </header>
 
@@ -337,28 +395,28 @@
     border: 1.5px solid var(--border);
     background: var(--surface);
     color: var(--text-mid);
-    border-radius: 8px;
+    border-radius: 20px;
     cursor: pointer;
     transition: all 0.15s;
     -webkit-tap-highlight-color: transparent;
   }
-  .time-btn:hover { border-color: var(--border-hover); background: var(--bg); }
-  .time-btn.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); font-weight: 700; }
+  .time-btn:hover { border-color: var(--border-hover); background: var(--accent-tint); }
+  .time-btn.active { border-color: var(--accent); background: var(--accent); color: white; font-weight: 700; }
 
   .btn-accent {
-    background: var(--accent);
+    background: linear-gradient(135deg, #1A6B6B 0%, #2A9D8F 100%);
     color: white;
     border: none;
-    padding: 10px 20px;
-    font-weight: 600;
-    border-radius: 8px;
+    padding: 11px 20px;
+    font-weight: 700;
+    border-radius: 10px;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: filter 0.15s, box-shadow 0.15s;
   }
-  .btn-accent:hover { background: #3d5be3; }
-  .btn-accent:disabled { background: #c5cde8; cursor: not-allowed; }
+  .btn-accent:hover { filter: brightness(1.05); box-shadow: 0 6px 18px rgba(26,107,107,0.28); }
+  .btn-accent:disabled { background: #c4dad6; cursor: not-allowed; filter: none; box-shadow: none; }
 
-  #timerDisplay.warning { color: #f59e0b; }
+  #timerDisplay.warning { color: var(--gold); }
   #timerDisplay.danger { color: var(--error); animation: pulse-danger 0.6s infinite; }
 
   @keyframes pulse-danger {
@@ -481,6 +539,50 @@ function playPlace() {
   osc.stop(now + 0.12);
 }
 
+// Annoying timer tick — ramps from a calm metronome to an urgent buzz
+// as the timer drains. Called once per second from tick().
+function playAnnoyingTick(secondsLeft) {
+  ensureAudio();
+  const now = audioCtx.currentTime;
+
+  if (secondsLeft <= 10) {
+    [880, 1320].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, now + i * 0.08);
+      gain.gain.linearRampToValueAtTime(0.18, now + i * 0.08 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.14);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now + i * 0.08);
+      osc.stop(now + i * 0.08 + 0.14);
+    });
+  } else if (secondsLeft <= 30) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.value = 700;
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.16, now + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.09);
+  } else {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 1000;
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.07, now + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.04);
+  }
+}
+
 // ── Timer ──
 function formatTime(secs) {
   const m = Math.floor(secs / 60);
@@ -511,7 +613,9 @@ function tick() {
     feedbackEl.innerHTML = '<div class="feedback-msg error">Time\'s up! Reset to try again.</div>';
     playError();
     disableUI();
+    return;
   }
+  playAnnoyingTick(timerSeconds);
 }
 
 function disableUI() {
