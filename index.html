@@ -360,10 +360,6 @@
 
 <section class="hero">
   <h1>Action Potential Sequencer</h1>
-  <p>
-    <span class="desktop-hint">Drag cards into the correct order, or click to select then click a slot. Place all 8, then check.</span>
-    <span class="mobile-hint">Tap a card, then tap the step where it belongs. Place all 8, then check.</span>
-  </p>
   <div class="badge-row">
     <span>Drag &amp; Drop</span>
     <span>8 Steps</span>
@@ -374,16 +370,17 @@
 <header class="app-header">
   <!-- Timer section -->
   <div id="timerSection" style="padding: 18px 20px; background: white; border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,0.08);">
-    <div style="font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px;">Challenge Mode</div>
+    <div style="font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); margin-bottom: 4px;">Challenge Steps</div>
+    <div style="font-size: 13px; color: var(--text-mid); margin-bottom: 12px;">Start at Step 1 to learn the order, then work your way up to Step 4.</div>
     <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
-      <button class="time-btn active" data-time="none">No Timer</button>
-      <button class="time-btn" data-time="30">30s</button>
-      <button class="time-btn" data-time="60">1m</button>
-      <button class="time-btn" data-time="120">2m</button>
+      <button class="time-btn active" data-time="none">Step 1 · Practice</button>
+      <button class="time-btn" data-time="120">Step 2 · 2m</button>
+      <button class="time-btn" data-time="60">Step 3 · 1m</button>
+      <button class="time-btn" data-time="30">Step 4 · 30s</button>
     </div>
     <div id="timerDisplay" style="font-size: 32px; font-weight: 700; text-align: center; letter-spacing: 1px; color: var(--accent); font-variant-numeric: tabular-nums; display: none; margin-bottom: 10px;">--:--</div>
     <button id="timerStartBtn" class="btn btn-accent" style="width: 100%; display: none;">Start Timer</button>
-    <div id="noTimerMsg" style="text-align: center; font-size: 13px; color: var(--text-mid); margin-top: 4px;">No timer active. Play at your own pace.</div>
+    <div id="noTimerMsg" style="text-align: center; font-size: 13px; color: var(--text-mid); margin-top: 4px;">Step 1 — no timer. Play at your own pace.</div>
   </div>
 </header>
 
