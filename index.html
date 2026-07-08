@@ -4,48 +4,55 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 <title>Action Potential Sequencer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Roboto+Mono:wght@400;500;700&family=Roboto+Serif:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f5f7fa;
+    --bg: #F7F3EE;
     --surface: #ffffff;
-    --border: #e0ebe9;
-    --border-hover: #c4dad6;
-    --text: #1a2d2b;
-    --text-mid: #4a5d5a;
-    --text-light: #8aa39d;
-    --accent: #1A6B6B;
-    --accent-2: #2A9D8F;
-    --accent-light: #e8f1f0;
-    --accent-tint: #f0f5f4;
-    --success: #2A9D8F;
-    --success-bg: #e8f5f3;
-    --success-border: #2A9D8F;
-    --error: #E65C3C;
-    --error-bg: #fce8e4;
-    --error-border: #E65C3C;
-    --gold: #D4A843;
-    --slot-empty: #f0f5f4;
-    --slot-border: #c4dad6;
-    --card-shadow: 0 6px 24px rgba(0,0,0,0.08);
-    --card-shadow-lift: 0 14px 40px rgba(26,107,107,0.18);
-    --radius: 14px;
+    --border: #E8E0D2;
+    --border-hover: #DDD1C3;
+    --text: #1C1917;
+    --text-mid: #57534E;
+    --text-light: #7C6F5A;
+    --accent: #6366F1;
+    --accent-hover: #4F46E5;
+    --accent-2: #818CF8;
+    --accent-light: #EEF0FF;
+    --accent-tint: rgba(99,102,241,0.09);
+    --accent-line: rgba(99,102,241,0.30);
+    --success: #10b981;
+    --success-bg: #EEF6E9;
+    --success-border: #16A34A;
+    --error: #EF4444;
+    --error-bg: #FDECEC;
+    --error-border: #EF4444;
+    --gold: #B4791F;
+    --slot-empty: #F0EBE3;
+    --slot-border: #DDD1C3;
+    --card-shadow: 0 4px 12px rgba(17,17,17,0.06), 0 2px 4px rgba(17,17,17,0.04);
+    --card-shadow-lift: 0 16px 40px rgba(17,17,17,0.10), 0 4px 12px rgba(17,17,17,0.06);
+    --radius: 16px;
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-serif: 'Roboto Serif', Georgia, Cambria, serif;
+    --font-mono: 'Roboto Mono', monospace;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-sans);
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
     min-height: 100dvh;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
   }
 
   /* ── Hero Header (matches review-game aesthetic) ── */
   .hero {
-    background: linear-gradient(135deg, #1A6B6B 0%, #2A9D8F 100%);
+    background: linear-gradient(150deg, #4F46E5 0%, #6366F1 100%);
     color: white;
-    padding: 50px 30px 80px;
+    padding: 56px 30px 92px;
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -55,15 +62,26 @@
     position: absolute;
     top: -50%; left: -50%;
     width: 200%; height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 2px);
+    background: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 2px);
     background-size: 40px 40px;
     pointer-events: none;
   }
+  .hero .kicker {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    opacity: 0.9;
+    font-weight: 500;
+    position: relative;
+  }
   .hero h1 {
-    font-size: 2.4rem;
+    font-family: var(--font-serif);
+    font-size: 2.6rem;
     font-weight: 700;
-    margin-bottom: 8px;
+    margin: 10px 0 8px;
     letter-spacing: -0.5px;
+    line-height: 1.08;
     position: relative;
   }
   .hero p {
@@ -77,25 +95,31 @@
   .hero .badge-row {
     display: flex;
     justify-content: center;
-    gap: 8px;
-    margin-top: 18px;
+    gap: 9px;
+    margin-top: 20px;
     flex-wrap: wrap;
     position: relative;
   }
   .hero .badge-row span {
-    background: rgba(255,255,255,0.2);
-    padding: 5px 12px;
-    border-radius: 20px;
+    background: rgba(255,255,255,0.18);
+    padding: 6px 13px;
+    border-radius: 9999px;
     font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.5px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
   }
   header.app-header {
     max-width: 1120px;
-    margin: -50px auto 0;
+    margin: -56px auto 0;
     padding: 0 20px;
     position: relative;
     z-index: 2;
+    animation: fadeUp 0.35s ease-out;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   .mobile-hint { display: none; }
 
@@ -108,13 +132,15 @@
     grid-template-columns: 1fr 1fr;
     gap: 28px;
     align-items: start;
+    animation: fadeUp 0.4s ease-out 0.05s both;
   }
   .column-label {
+    font-family: var(--font-mono);
     font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
+    font-weight: 900;
+    letter-spacing: 0.25em;
     text-transform: uppercase;
-    color: var(--text-light);
+    color: var(--accent);
     margin-bottom: 10px;
   }
 
@@ -125,9 +151,9 @@
     gap: 8px;
     padding: 12px;
     min-height: 120px;
-    background: rgba(0,0,0,0.015);
-    border: 1.5px dashed rgba(0,0,0,0.06);
-    border-radius: 14px;
+    background: var(--slot-empty);
+    border: 1.5px dashed var(--border);
+    border-radius: 16px;
   }
   .card-bank .card {
     flex: 0 0 auto;
@@ -145,11 +171,12 @@
     color: var(--text);
     cursor: pointer;
     user-select: none;
-    box-shadow: 0 2px 8px rgba(26,107,107,0.06);
+    box-shadow: 0 1px 2px rgba(17,17,17,0.05), 0 2px 6px rgba(17,17,17,0.08);
     transition: border-color 0.15s, box-shadow 0.2s, transform 0.2s, opacity 0.2s;
     -webkit-user-select: none;
   }
-  .card:hover { border-color: var(--border-hover); box-shadow: 0 4px 14px rgba(26,107,107,0.10); }
+  .card:hover { border-color: var(--border-hover); box-shadow: var(--card-shadow); }
+  .slot .card:hover { transform: translateY(-3px); }
   .card.selected {
     border-color: var(--accent-2);
     box-shadow: var(--card-shadow-lift);
@@ -222,18 +249,18 @@
     font-size: 14px;
     font-weight: 600;
     padding: 11px 28px;
-    border-radius: 8px;
+    border-radius: 11px;
     border: none;
     cursor: pointer;
-    transition: background 0.15s, transform 0.05s;
+    transition: background 0.15s, transform 0.05s, box-shadow 0.15s;
     -webkit-tap-highlight-color: transparent;
   }
   .btn:active { transform: scale(0.96); }
-  .btn-primary { background: linear-gradient(135deg, #1A6B6B 0%, #2A9D8F 100%); color: white; }
-  .btn-primary:hover { filter: brightness(1.05); box-shadow: 0 6px 18px rgba(26,107,107,0.28); }
-  .btn-primary:disabled { background: #c4dad6; cursor: not-allowed; filter: none; box-shadow: none; }
-  .btn-secondary { background: var(--accent-tint); color: var(--accent); border: 1.5px solid var(--border); font-weight: 700; }
-  .btn-secondary:hover { background: #dbe8e5; border-color: var(--border-hover); }
+  .btn-primary { background: linear-gradient(150deg, #4F46E5 0%, #6366F1 100%); color: white; }
+  .btn-primary:hover { filter: brightness(1.05); box-shadow: 0 6px 18px rgba(17,17,17,0.14); }
+  .btn-primary:disabled { background: #DDD1C3; cursor: not-allowed; filter: none; box-shadow: none; }
+  .btn-secondary { background: var(--accent-tint); color: var(--accent); border: 1.5px solid var(--accent-line); font-weight: 700; }
+  .btn-secondary:hover { background: var(--accent-light); border-color: var(--accent); }
 
   /* ── Feedback ── */
   .feedback {
@@ -359,7 +386,9 @@
 <body>
 
 <section class="hero">
+  <div class="kicker">Neuroscience Lab</div>
   <h1>Action Potential Sequencer</h1>
+  <p>Put the eight steps of the action potential in the right order, then race the clock.</p>
   <div class="badge-row">
     <span>Drag &amp; Drop</span>
     <span>8 Steps</span>
@@ -369,8 +398,8 @@
 
 <header class="app-header">
   <!-- Timer section -->
-  <div id="timerSection" style="padding: 18px 20px; background: white; border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,0.08);">
-    <div style="font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); margin-bottom: 4px;">Challenge Steps</div>
+  <div id="timerSection" style="padding: 18px 20px; background: white; border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--card-shadow);">
+    <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 900; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px;">Challenge Steps</div>
     <div style="font-size: 13px; color: var(--text-mid); margin-bottom: 12px;">Start at Step 1 to learn the order, then work your way up to Step 4.</div>
     <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
       <button class="time-btn active" data-time="none">Step 1 · Practice</button>
@@ -378,7 +407,7 @@
       <button class="time-btn" data-time="60">Step 3 · 1m</button>
       <button class="time-btn" data-time="30">Step 4 · 30s</button>
     </div>
-    <div id="timerDisplay" style="font-size: 32px; font-weight: 700; text-align: center; letter-spacing: 1px; color: var(--accent); font-variant-numeric: tabular-nums; display: none; margin-bottom: 10px;">--:--</div>
+    <div id="timerDisplay" style="font-family: var(--font-mono); font-size: 32px; font-weight: 700; text-align: center; letter-spacing: 1px; color: var(--accent); font-variant-numeric: tabular-nums; display: none; margin-bottom: 10px;">--:--</div>
     <button id="timerStartBtn" class="btn btn-accent" style="width: 100%; display: none;">Start Timer</button>
     <div id="noTimerMsg" style="text-align: center; font-size: 13px; color: var(--text-mid); margin-top: 4px;">Step 1 — no timer. Play at your own pace.</div>
   </div>
@@ -389,10 +418,12 @@
     padding: 8px 16px;
     font-size: 13px;
     font-weight: 600;
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
     border: 1.5px solid var(--border);
     background: var(--surface);
     color: var(--text-mid);
-    border-radius: 20px;
+    border-radius: 9999px;
     cursor: pointer;
     transition: all 0.15s;
     -webkit-tap-highlight-color: transparent;
@@ -401,17 +432,18 @@
   .time-btn.active { border-color: var(--accent); background: var(--accent); color: white; font-weight: 700; }
 
   .btn-accent {
-    background: linear-gradient(135deg, #1A6B6B 0%, #2A9D8F 100%);
+    background: linear-gradient(150deg, #4F46E5 0%, #6366F1 100%);
     color: white;
     border: none;
     padding: 11px 20px;
     font-weight: 700;
-    border-radius: 10px;
+    font-family: var(--font-sans);
+    border-radius: 11px;
     cursor: pointer;
     transition: filter 0.15s, box-shadow 0.15s;
   }
-  .btn-accent:hover { filter: brightness(1.05); box-shadow: 0 6px 18px rgba(26,107,107,0.28); }
-  .btn-accent:disabled { background: #c4dad6; cursor: not-allowed; filter: none; box-shadow: none; }
+  .btn-accent:hover { filter: brightness(1.05); box-shadow: 0 6px 18px rgba(17,17,17,0.14); }
+  .btn-accent:disabled { background: #DDD1C3; cursor: not-allowed; filter: none; box-shadow: none; }
 
   #timerDisplay.warning { color: var(--gold); }
   #timerDisplay.danger { color: var(--error); animation: pulse-danger 0.6s infinite; }
@@ -633,7 +665,7 @@ function burstConfetti() {
   const c = document.createElement('div');
   c.className = 'confetti-container';
   document.body.appendChild(c);
-  const colors = ['#4f6df5','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4'];
+  const colors = ['#6366F1','#10b981','#f59e0b','#ef4444','#a855f7','#818CF8'];
   for (let i = 0; i < 60; i++) {
     const p = document.createElement('div');
     p.className = 'confetti-piece';
